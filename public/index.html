@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RetailSQL — Retail Sales SQL Explorer</title>
+  <meta name="description"
+    content="Explore, query, and analyse retail sales data with an interactive SQL editor and live dashboard." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- NAV -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span class="brand-name">RetailSQL</span>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="dashboard" id="tab-dashboard">Dashboard</button>
+      <button class="nav-tab" data-tab="explorer" id="tab-explorer">SQL Explorer</button>
+      <button class="nav-tab" data-tab="schema" id="tab-schema">Schema</button>
+      <button class="nav-tab" data-tab="tutorial" id="tab-tutorial">Tutorials</button>
+    </div>
+    <button class="btn-reset" id="btn-reset" title="Reset database to original seed data">Reset DB</button>
+  </nav>
+
+  <!-- PAGES -->
+
+  <!-- DASHBOARD -->
+  <section class="page active" id="page-dashboard">
+    <div class="page-header">
+      <h1>Sales Dashboard</h1>
+      <p class="page-sub">Live analytics powered by SQL queries on your retail database</p>
+    </div>
+
+    <div class="kpi-grid" id="kpi-grid">
+      <div class="kpi-card" id="kpi-revenue">
+        <div class="kpi-icon kpi-icon--revenue">$</div>
+        <div class="kpi-body">
+          <div class="kpi-value" id="kv-revenue">—</div>
+          <div class="kpi-label">Total Revenue</div>
+        </div>
+      </div>
+      <div class="kpi-card" id="kpi-transactions">
+        <div class="kpi-icon kpi-icon--tx">#</div>
+        <div class="kpi-body">
+          <div class="kpi-value" id="kv-transactions">—</div>
+          <div class="kpi-label">Total Transactions</div>
+        </div>
+      </div>
+      <div class="kpi-card" id="kpi-customers">
+        <div class="kpi-icon kpi-icon--cust">C</div>
+        <div class="kpi-body">
+          <div class="kpi-value" id="kv-customers">—</div>
+          <div class="kpi-label">Total Customers</div>
+        </div>
+      </div>
+      <div class="kpi-card" id="kpi-products">
+        <div class="kpi-icon kpi-icon--prod">P</div>
+        <div class="kpi-body">
+          <div class="kpi-value" id="kv-products">—</div>
+          <div class="kpi-label">Products Listed</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="dash-card" id="dash-top-products">
+        <h2 class="dash-card-title">Top 5 Products by Revenue</h2>
+        <div class="table-wrap" id="top-products-table"></div>
+      </div>
+      <div class="dash-card" id="dash-top-stores">
+        <h2 class="dash-card-title">Top Stores by Sales</h2>
+        <div class="table-wrap" id="top-stores-table"></div>
+      </div>
+      <div class="dash-card wide" id="dash-monthly">
+        <h2 class="dash-card-title">Monthly Revenue Trend</h2>
+        <div class="bar-chart-wrap" id="monthly-chart"></div>
+      </div>
+      <div class="dash-card" id="dash-category">
+        <h2 class="dash-card-title">Revenue by Category</h2>
+        <div class="table-wrap" id="category-table"></div>
+      </div>
+      <div class="dash-card" id="dash-top-customers">
+        <h2 class="dash-card-title">Top Customers</h2>
+        <div class="table-wrap" id="top-customers-table"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SQL EXPLORER -->
+  <section class="page" id="page-explorer">
+    <div class="page-header">
+      <h1>SQL Explorer</h1>
+      <p class="page-sub">Write and run any SQL query against the retail database</p>
+    </div>
+
+    <div class="explorer-layout">
+      <div class="query-panel">
+        <div class="query-panel-header">
+          <span class="query-panel-title">Query Editor</span>
+          <div class="query-actions">
+            <button class="btn-secondary" id="btn-clear">Clear</button>
+            <button class="btn-primary" id="btn-run">Run Query</button>
+          </div>
+        </div>
+        <textarea id="sql-editor" class="sql-editor" spellcheck="false" placeholder="-- Write your SQL here
+SELECT * FROM products LIMIT 10;"></textarea>
+        <div class="quick-queries">
+          <span class="qq-label">Quick:</span>
+          <button class="qq-btn" data-q="SELECT * FROM products;">All Products</button>
+          <button class="qq-btn" data-q="SELECT * FROM customers;">All Customers</button>
+          <button class="qq-btn" data-q="SELECT * FROM stores;">All Stores</button>
+          <button class="qq-btn"
+            data-q="SELECT t.transaction_id, c.first_name || ' ' || c.last_name AS customer, p.product_name, t.quantity, p.price, t.quantity * p.price AS total, t.transaction_date FROM transactions t JOIN customers c ON t.customer_id = c.customer_id JOIN products p ON t.product_id = p.product_id ORDER BY t.transaction_date DESC LIMIT 20;">Recent
+            Sales</button>
+          <button class="qq-btn"
+            data-q="SELECT category, COUNT(*) as products, SUM(price * stock_quantity) as inventory_value FROM products GROUP BY category ORDER BY inventory_value DESC;">Inventory
+            Value</button>
+        </div>
+      </div>
+
+      <div class="result-panel">
+        <div class="result-panel-header">
+          <span class="result-panel-title">Results</span>
+          <span class="result-meta" id="result-meta"></span>
+        </div>
+        <div class="result-body" id="result-body">
+          <div class="result-placeholder">
+            <div class="result-placeholder-icon">SQL</div>
+            <p>Run a query to see results here</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCHEMA -->
+  <section class="page" id="page-schema">
+    <div class="page-header">
+      <h1>Database Schema</h1>
+      <p class="page-sub">Entity Relationship overview of the RetailSQL database</p>
+    </div>
+
+    <div class="schema-grid">
+      <div class="schema-table-card">
+        <div class="schema-table-header" style="background: linear-gradient(135deg,#6366f1,#818cf8)">
+          <span class="schema-table-name">stores</span>
+        </div>
+        <table class="schema-field-table">
+          <tr>
+            <th>Column</th>
+            <th>Type</th>
+            <th>Notes</th>
+          </tr>
+          <tr>
+            <td class="pk">store_id</td>
+            <td>INTEGER</td>
+            <td>PRIMARY KEY</td>
+          </tr>
+          <tr>
+            <td>location</td>
+            <td>VARCHAR(100)</td>
+            <td>NOT NULL</td>
+          </tr>
+          <tr>
+            <td>manager_name</td>
+            <td>VARCHAR(100)</td>
+            <td></td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="schema-table-card">
+        <div class="schema-table-header" style="background: linear-gradient(135deg,#0ea5e9,#38bdf8)">
+          <span class="schema-table-name">customers</span>
+        </div>
+        <table class="schema-field-table">
+          <tr>
+            <th>Column</th>
+            <th>Type</th>
+            <th>Notes</th>
+          </tr>
+          <tr>
+            <td class="pk">customer_id</td>
+            <td>INTEGER</td>
+            <td>PRIMARY KEY</td>
+          </tr>
+          <tr>
+            <td>first_name</td>
+            <td>VARCHAR(50)</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>last_name</td>
+            <td>VARCHAR(50)</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>email</td>
+            <td>VARCHAR(100)</td>
+            <td>UNIQUE</td>
+          </tr>
+          <tr>
+            <td>join_date</td>
+            <td>DATE</td>
+            <td></td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="schema-table-card">
+        <div class="schema-table-header" style="background: linear-gradient(135deg,#f59e0b,#fbbf24)">
+          <span class="schema-table-name">products</span>
+        </div>
+        <table class="schema-field-table">
+          <tr>
+            <th>Column</th>
+            <th>Type</th>
+            <th>Notes</th>
+          </tr>
+          <tr>
+            <td class="pk">product_id</td>
+            <td>INTEGER</td>
+            <td>PRIMARY KEY</td>
+          </tr>
+          <tr>
+            <td>product_name</td>
+            <td>VARCHAR(100)</td>
+            <td>NOT NULL</td>
+          </tr>
+          <tr>
+            <td>category</td>
+            <td>VARCHAR(50)</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>price</td>
+            <td>DECIMAL(10,2)</td>
+            <td>NOT NULL</td>
+          </tr>
+          <tr>
+            <td>stock_quantity</td>
+            <td>INTEGER</td>
+            <td></td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="schema-table-card">
+        <div class="schema-table-header" style="background: linear-gradient(135deg,#ec4899,#f472b6)">
+          <span class="schema-table-name">transactions</span>
+        </div>
+        <table class="schema-field-table">
+          <tr>
+            <th>Column</th>
+            <th>Type</th>
+            <th>Notes</th>
+          </tr>
+          <tr>
+            <td class="pk">transaction_id</td>
+            <td>INTEGER</td>
+            <td>PRIMARY KEY</td>
+          </tr>
+          <tr>
+            <td class="fk">customer_id</td>
+            <td>INTEGER</td>
+            <td>FK &rarr; customers</td>
+          </tr>
+          <tr>
+            <td class="fk">store_id</td>
+            <td>INTEGER</td>
+            <td>FK &rarr; stores</td>
+          </tr>
+          <tr>
+            <td class="fk">product_id</td>
+            <td>INTEGER</td>
+            <td>FK &rarr; products</td>
+          </tr>
+          <tr>
+            <td>quantity</td>
+            <td>INTEGER</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>transaction_date</td>
+            <td>DATETIME</td>
+            <td></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="er-diagram">
+      <h2 class="er-title">Entity Relationship Diagram</h2>
+      <div class="er-box">
+        <div class="er-entity er-entity--stores">stores<br /><small>store_id PK</small></div>
+        <div class="er-line er-h"></div>
+        <div class="er-entity er-entity--trans">transactions<br /><small>transaction_id PK</small></div>
+        <div class="er-line er-h"></div>
+        <div class="er-entity er-entity--customers">customers<br /><small>customer_id PK</small></div>
+      </div>
+      <div class="er-box" style="margin-top:1rem">
+        <div class="er-entity er-entity--products">products<br /><small>product_id PK</small></div>
+      </div>
+      <p class="er-note">transactions links to stores, customers, and products via foreign keys</p>
+    </div>
+  </section>
+
+  <!-- TUTORIALS -->
+  <section class="page" id="page-tutorial">
+    <div class="page-header">
+      <h1>SQL Tutorials</h1>
+      <p class="page-sub">Learn SQL using real retail data — click any query to load it in the explorer</p>
+    </div>
+
+    <div class="tut-grid">
+
+      <div class="tut-card">
+        <div class="tut-badge">Beginner</div>
+        <h3 class="tut-title">Basic SELECT</h3>
+        <p class="tut-desc">Retrieve all records from the products table.</p>
+        <pre class="tut-code">SELECT * FROM products;</pre>
+        <button class="tut-run-btn" data-q="SELECT * FROM products;">Try it</button>
+      </div>
+
+      <div class="tut-card">
+        <div class="tut-badge">Beginner</div>
+        <h3 class="tut-title">Filtering with WHERE</h3>
+        <p class="tut-desc">Find all Electronics products under $100.</p>
+        <pre class="tut-code">SELECT product_name, price
+FROM products
+WHERE category = 'Electronics'
+  AND price &lt; 100;</pre>
+        <button class="tut-run-btn"
+          data-q="SELECT product_name, price FROM products WHERE category = 'Electronics' AND price < 100;">Try
+          it</button>
+      </div>
+
+      <div class="tut-card">
+        <div class="tut-badge">Beginner</div>
+        <h3 class="tut-title">ORDER BY &amp; LIMIT</h3>
+        <p class="tut-desc">Get the top 5 most expensive products.</p>
+        <pre class="tut-code">SELECT product_name, category, price
+FROM products
+ORDER BY price DESC
+LIMIT 5;</pre>
+        <button class="tut-run-btn"
+          data-q="SELECT product_name, category, price FROM products ORDER BY price DESC LIMIT 5;">Try it</button>
+      </div>
+
+      <div class="tut-card">
+        <div class="tut-badge">Intermediate</div>
+        <h3 class="tut-title">Aggregate Functions</h3>
+        <p class="tut-desc">Count products and calculate average price per category.</p>
+        <pre class="tut-code">SELECT category,
+  COUNT(*) AS total_products,
+  ROUND(AVG(price), 2) AS avg_price,
+  MAX(price) AS max_price
+FROM products
+GROUP BY category
+ORDER BY avg_price DESC;</pre>
+        <button class="tut-run-btn"
+          data-q="SELECT category, COUNT(*) AS total_products, ROUND(AVG(price),2) AS avg_price, MAX(price) AS max_price FROM products GROUP BY category ORDER BY avg_price DESC;">Try
+          it</button>
+      </div>
+
+      <div class="tut-card">
+        <div class="tut-badge">Intermediate</div>
+        <h3 class="tut-title">JOIN Tables</h3>
+        <p class="tut-desc">List all transactions with customer and product names.</p>
+        <pre class="tut-code">SELECT t.transaction_id,
+  c.first_name || ' ' || c.last_name AS customer,
+  p.product_name,
+  t.quantity,
+  p.price * t.quantity AS total_amount,
+  t.transaction_date
+FROM transactions t
+JOIN customers c ON t.customer_id = c.customer_id
+JOIN products p ON t.product_id = p.product_id
+ORDER BY t.transaction_date DESC;</pre>
+        <button class="tut-run-btn"
+          data-q="SELECT t.transaction_id, c.first_name || ' ' || c.last_name AS customer, p.product_name, t.quantity, p.price * t.quantity AS total_amount, t.transaction_date FROM transactions t JOIN customers c ON t.customer_id = c.customer_id JOIN products p ON t.product_id = p.product_id ORDER BY t.transaction_date DESC;">Try
+          it</button>
+      </div>
+
+      <div class="tut-card">
+        <div class="tut-badge">Intermediate</div>
+        <h3 class="tut-title">Revenue by Store</h3>
+        <p class="tut-desc">Calculate total revenue for each store location.</p>
+        <pre class="tut-code">SELECT s.location,
+  s.manager_name,
+  COUNT(t.transaction_id) AS total_sales,
+  ROUND(SUM(t.quantity * p.price), 2) AS revenue
+FROM transactions t
+JOIN stores s ON t.store_id = s.store_id
+JOIN products p ON t.product_id = p.product_id
+GROUP BY s.store_id
+ORDER BY revenue DESC;</pre>
+        <button class="tut-run-btn"
+          data-q="SELECT s.location, s.manager_name, COUNT(t.transaction_id) AS total_sales, ROUND(SUM(t.quantity * p.price), 2) AS revenue FROM transactions t JOIN stores s ON t.store_id = s.store_id JOIN products p ON t.product_id = p.product_id GROUP BY s.store_id ORDER BY revenue DESC;">Try
+          it</button>
+      </div>
+
+      <div class="tut-card">
+        <div class="tut-badge">Advanced</div>
+        <h3 class="tut-title">Monthly Trends</h3>
+        <p class="tut-desc">Aggregate monthly sales revenue using strftime.</p>
+        <pre class="tut-code">SELECT
+  strftime('%Y-%m', transaction_date) AS month,
+  COUNT(*) AS transactions,
+  ROUND(SUM(t.quantity * p.price), 2) AS revenue
+FROM transactions t
+JOIN products p ON t.product_id = p.product_id
+GROUP BY month
+ORDER BY month;</pre>
+        <button class="tut-run-btn"
+          data-q="SELECT strftime('%Y-%m', transaction_date) AS month, COUNT(*) AS transactions, ROUND(SUM(t.quantity * p.price), 2) AS revenue FROM transactions t JOIN products p ON t.product_id = p.product_id GROUP BY month ORDER BY month;">Try
+          it</button>
+      </div>
+
+      <div class="tut-card">
+        <div class="tut-badge">Advanced</div>
+        <h3 class="tut-title">Subquery — Above Avg Spenders</h3>
+        <p class="tut-desc">Find customers who spent more than the average transaction amount.</p>
+        <pre class="tut-code">SELECT c.first_name || ' ' || c.last_name AS customer,
+  ROUND(SUM(t.quantity * p.price), 2) AS total_spent
+FROM transactions t
+JOIN customers c ON t.customer_id = c.customer_id
+JOIN products p ON t.product_id = p.product_id
+GROUP BY t.customer_id
+HAVING total_spent > (
+  SELECT AVG(sub.quantity * sp.price)
+  FROM transactions sub
+  JOIN products sp ON sub.product_id = sp.product_id
+)
+ORDER BY total_spent DESC;</pre>
+        <button class="tut-run-btn"
+          data-q="SELECT c.first_name || ' ' || c.last_name AS customer, ROUND(SUM(t.quantity * p.price), 2) AS total_spent FROM transactions t JOIN customers c ON t.customer_id = c.customer_id JOIN products p ON t.product_id = p.product_id GROUP BY t.customer_id HAVING total_spent > (SELECT AVG(sub.quantity * sp.price) FROM transactions sub JOIN products sp ON sub.product_id = sp.product_id) ORDER BY total_spent DESC;">Try
+          it</button>
+      </div>
+
+      <div class="tut-card">
+        <div class="tut-badge">Advanced</div>
+        <h3 class="tut-title">Window Function — Running Total</h3>
+        <p class="tut-desc">Calculate a running total of revenue ordered by date.</p>
+        <pre class="tut-code">SELECT transaction_date,
+  ROUND(t.quantity * p.price, 2) AS sale_amount,
+  ROUND(SUM(t.quantity * p.price)
+    OVER (ORDER BY transaction_date), 2) AS running_total
+FROM transactions t
+JOIN products p ON t.product_id = p.product_id
+ORDER BY transaction_date;</pre>
+        <button class="tut-run-btn"
+          data-q="SELECT transaction_date, ROUND(t.quantity * p.price, 2) AS sale_amount, ROUND(SUM(t.quantity * p.price) OVER (ORDER BY transaction_date), 2) AS running_total FROM transactions t JOIN products p ON t.product_id = p.product_id ORDER BY transaction_date;">Try
+          it</button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
