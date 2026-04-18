@@ -1,6 +1,6 @@
 # RetailSQL — Retail Sales SQL Explorer
 
-A full-stack web application for exploring and analysing retail sales data through an interactive SQL interface, built as part of the **Virtusa SQL Project**.
+A full-stack web application for exploring and analysing retail sales data through an interactive SQL interface.
 
 ## Features
 
